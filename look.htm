@@ -1,0 +1,50 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+	<style type="text/css">html { height: 100% } body { height: 100%; margin: 0; padding: 0 }   #map { height: 100% }
+        #notify { display: none; position: absolute; bottom: 25%; left: 25%;  width: 50%; color: #FFF; background-color: #000;
+            background-color: rgba(0,0,0,0.8);  font-weight: bold;  padding: 20px;   font-size: 20px;  font-family: "Helvetica Neue", Helvetica, sans-serif;}
+    </style></head><body><div id="map"></div>
+    <div id="notify">This demo is meant to be viewed on an iOS or Android device. Look to your left or right, there's probably someone who has one there. Tap them on the shoulder, and ask them if you can borrow it for a minute. Without one of those devices, this won't be very cool.</div>
+<script src="http://maps.googleapis.com/maps/api/js"></script><script type="text/javascript">
+var szLat='51.5127922',szLng='-0.1342111'; // soho 51.5127922,-0.1342111
+var szUboundLat='52.5127922',szUboundLng='-0.1352111';
+var szLboundLat='50.5127922',szLboundLng='-0.1332111';
+var here=new google.maps.LatLng(szLat, szLng),
+panoramaOptions = { position: here, pov: { heading: 34, pitch: 10, zoom: 1 },
+panControl: true, zoomControl: true, addressControl: false, linksControl: false,  scrollwheel: true },
+panorama = new google.maps.StreetViewPanorama(document.getElementById('map'), panoramaOptions);
+
+var szBounds = new google.maps.LatLngBounds(
+      new google.maps.LatLng(szUboundLat,szUboundLng),  new google.maps.LatLng(szLboundLat, szLboundLng));
+var szFrontCard='img/neon-light-text-effect-soho22q8.jpg';
+var overlay; USGSOverlay.prototype = new google.maps.OverlayView(); overlay = new USGSOverlay(szBounds, szFrontCard, panorama);
+/** @constructor */
+function USGSOverlay(bounds, image, map) {this.bounds_ =bounds; this.image_ =image; this.map_ =map; // Initialize prop.
+// Define a property to hold the image's div. We'll actually create this div upon receipt of the onAdd() method 
+this.div_ = null; //so we'll leave it null for now.
+this.setMap(map);} // Explicitly call setMap on this overlay.
+/** onAdd is called when the map's panes are ready and the overlay has been added to the map. */
+USGSOverlay.prototype.onAdd = function() {var div = document.createElement('div');
+  div.style.borderStyle = 'none'; div.style.borderWidth = '0px'; div.style.position = 'absolute';
+// Create the img element and attach it to the div.
+  var img = document.createElement('img'); img.src = this.image_; img.style.width = '100%';  img.style.height = '100%';
+  img.style.position = 'absolute';  div.appendChild(img); this.div_ =div;
+  var panes = this.getPanes();  panes.overlayLayer.appendChild(div);}; // Add the element to the "overlayLayer" pane.
+USGSOverlay.prototype.draw = function() {// We use the south-west and north-east coordinates of the overlay to peg it 
+// to the correct position and size. To do this, we need to retrieve the projection from the overlay.
+  var overlayProjection = this.getProjection();
+  // Retrieve the south-west and north-east coordinates of this overlay in LatLngs and convert them to pixel coordinates.
+  // We'll use these coordinates to resize the div.
+  var sw = overlayProjection.fromLatLngToDivPixel(this.bounds_.getSouthWest());
+  var ne = overlayProjection.fromLatLngToDivPixel(this.bounds_.getNorthEast());
+
+// see this maybe? http://stackoverflow.com/questions/1538681/how-to-call-fromlatlngtodivpixel-in-google-maps-api-v3
+
+  // Resize the image's div to fit the indicated dimensions.
+  var div = this.div_; 
+div.style.left = sw.x + 'px'; 
+div.style.top = ne.y + 'px';
+div.style.width = (ne.x - sw.x) + 'px'; 
+div.style.height = (sw.y - ne.y) + 'px';};
+// The onRemove() method will be called automatically from the API if we ever set the overlay's map property to 'null'.
+USGSOverlay.prototype.onRemove = function() {this.div_.parentNode.removeChild(this.div_); this.div_ = null;};
+</script></body></html>
